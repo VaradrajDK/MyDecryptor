@@ -1,0 +1,29 @@
+CXX = g++
+CC = gcc
+NVCC = nvcc
+
+CFLAGS   = -O3 -march=native -fopenmp -funroll-loops -Wall -I./include
+NVCCFLAGS= -O3 -arch=sm_75 --use_fast_math -Xptxas=-v -I./include
+LDFLAGS  = -lssl -lcrypto -fopenmp
+
+SRC_C = src/main.c src/cli.c src/utils.c src/crypto.c src/keygen.c src/gpu.c
+SRC_CU = src/cuda_brute.cu
+
+OBJ_C = $(SRC_C:.c=.o)
+OBJ_CU = $(SRC_CU:.cu=.o)
+
+TARGET = encryption_extras
+
+all: $(TARGET)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.cu
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+
+$(TARGET): $(OBJ_C) $(OBJ_CU)
+	$(CXX) -o $@ $(OBJ_C) $(OBJ_CU) $(LDFLAGS)
+
+clean:
+	rm -f $(OBJ_C) $(OBJ_CU) $(TARGET)
